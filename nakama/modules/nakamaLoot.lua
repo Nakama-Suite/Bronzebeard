@@ -42,8 +42,8 @@ function nakama.Loot.Auto()
             local guid = corpse.guid
             if not blacklist[guid] and player:delay("nakamaLoot", 0.5) then
                 _A.InteractUnit(guid)
-                blacklist[guid] = true
                 _A.ClearTarget()
+                blacklist[guid] = true
                 return true
             end
         end
