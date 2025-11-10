@@ -7,7 +7,7 @@ local apepDir = _A.GetApepDirectory()
 _A.require(apepDir .. "\\nakama\\paladin\\spells.lua")
 _A.require(apepDir .. "\\nakama\\generic\\spells.lua")
 _A.require(apepDir .. "\\nakama\\modules\\pause.lua")
-_A.require(apepDir .. "\\nakama\\modules\\nakamaLoot.lua")
+_A.require(apepDir .. "\\nakama\\modules\\loot.lua")
 _A.require(apepDir .. "\\nakama\\modules\\potions.lua")
 _A.require(apepDir .. "\\nakama\\modules\\colors.lua")
 
