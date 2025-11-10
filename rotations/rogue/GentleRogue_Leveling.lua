@@ -1,8 +1,6 @@
 --------------------------------------------------------------------------------
 -- GentleRogue - Leveling
 -- Author: Gentleman
--- Design: Light → Heavy order, no early exits blocking ranged spells,
--- zero redundant API calls, per-tick caching only.
 --------------------------------------------------------------------------------
 local nakama, _A, nakama = ...
 local apepDir = _A.GetApepDirectory()
@@ -67,7 +65,7 @@ local gui = {
     -- spinner | HP potion % threshold
     {
         type = "spinner",
-        key = "_use_potions_health_percent",
+        key = "_use_potions_healthpercent",
         height = 10,
         y = 12,
         spin = 30,
@@ -184,7 +182,8 @@ local function inCombat()
         return true
     end
 
-    if not target or target:Dead() or target:Friend() then return true end
+    if not target then return true end
+    if target:Dead() or target:Friend() then return true end
 
     if sliceAndDice() then
         return true
@@ -209,7 +208,7 @@ local function outCombat()
         return true
     end
 
-    if player:Health() < player:Ui("_use_potions_health_percent_spin") and nakama:useHealthPotion() then
+    if player:Health() < player:Ui("_use_potions_healthpercent_spin") and nakama:useHealthPotion() then
         return true
     end
 end
