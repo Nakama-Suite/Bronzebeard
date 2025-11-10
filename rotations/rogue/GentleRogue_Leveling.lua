@@ -5,9 +5,13 @@
 local nakama, _A, nakama = ...
 local apepDir = _A.GetApepDirectory()
 _A.require(apepDir .. "\\nakama\\rogue\\spells.lua")
+_A.require(apepDir .. "\\nakama\\generic\\spells.lua")
+_A.require(apepDir .. "\\nakama\\modules\\pause.lua")
 _A.require(apepDir .. "\\nakama\\modules\\nakamaLoot.lua")
 _A.require(apepDir .. "\\nakama\\modules\\potions.lua")
-local spellLib = nakama.spellBook.Rogue
+local rogueSpell = nakama.SpellBook.Rogue
+local genericSpell = nakama.SpellBook.Generic
+local pause = nakama.Pause
 
 -- Static data (resolved once)
 local playerGUID = _A.Cache.Utils.playerGUID or _A.UnitGUID("player")
@@ -105,60 +109,48 @@ local gui = {
 local function exeOnLoad()
     if _A.UIErrorsFrame then _A.UIErrorsFrame:Hide() end
     _A.Sound_EnableErrorSpeech = 0
-    nakama.addLootListener()
+    nakama.Loot.AddListener()
 end
 
 local function exeOnUnload()
-    nakama.deleteLootListener()
-end
-
-local function pauseCast()
-    if player:IscastingAnySpell() then
-        return true
-    end
-end
-
-local function pauseStateOrMounted()
-    if player:Mounted() or player:State("stun || silence") then
-        return true
-    end
+    nakama.Loot.DeleteListener()
 end
 
 local function defensives()
-    if player:SpellReady(spellLib.Evasion) then
+    if player:SpellReady(rogueSpell.Evasion) then
         if player:Health() < 20 and player:Area_rangeCombatenemies(7) > 0 then
-            return player:Cast(spellLib.Evasion)
+            return player:Cast(rogueSpell.Evasion)
         end
     end
 end
 
 local function sliceAndDice()
-    if player:SpellReady(spellLib.SliceAndDice) then
+    if player:SpellReady(rogueSpell.SliceAndDice) then
         if player:Combo() > 1
-            and (not player:Buff(spellLib.SliceAndDice) or player:BuffRefreshable(spellLib.SliceAndDice)) then
-            return target:Cast(spellLib.SliceAndDice)
+            and (not player:Buff(rogueSpell.SliceAndDice) or player:BuffRefreshable(rogueSpell.SliceAndDice)) then
+            return target:Cast(rogueSpell.SliceAndDice)
         end
     end
 end
 
 local function main()
-    if target:SpellRange(spellLib.SinisterStrike) and _A.UnitIsFacing(player.guid, target.guid, 130) then
+    if target:SpellRange(rogueSpell.SinisterStrike) and _A.UnitIsFacing(player.guid, target.guid, 130) then
         if (player:Combo() == 5 or (player:Combo() > 2 and target:Ttd() < 5))
-            and player:SpellReady(spellLib.Eviscerate) then
-            return target:Cast(spellLib.Eviscerate)
+            and player:SpellReady(rogueSpell.Eviscerate) then
+            return target:Cast(rogueSpell.Eviscerate)
         end
 
-        if player:Combo() < 5 and player:SpellReady(spellLib.SinisterStrike) then
-            return target:Cast(spellLib.SinisterStrike)
+        if player:Combo() < 5 and player:SpellReady(rogueSpell.SinisterStrike) then
+            return target:Cast(rogueSpell.SinisterStrike)
         end
     end
 end
 
 local function throw()
-    if target and player:SpellReady(spellLib.Throw) then
+    if target and player:SpellReady(genericSpell.Throw) then
         local range = target:Range(2)
         if range > 7 and range < 30 and target:Infront() and target:Los() then
-            return target:Cast(spellLib.Throw)
+            return target:Cast(genericSpell.Throw)
         end
     end
 end
@@ -170,11 +162,11 @@ end
 local function inCombat()
     if not player then return true end
 
-    if pauseCast() then
+    if pause.PlayerCasting() then
         return true
     end
 
-    if pauseStateOrMounted() then
+    if pause.BadStateOrMounted() then
         return true
     end
 
