@@ -9,9 +9,13 @@ _A.require(apepDir .. "\\nakama\\generic\\spells.lua")
 _A.require(apepDir .. "\\nakama\\modules\\pause.lua")
 _A.require(apepDir .. "\\nakama\\modules\\nakamaLoot.lua")
 _A.require(apepDir .. "\\nakama\\modules\\potions.lua")
+_A.require(apepDir .. "\\nakama\\modules\\colors.lua")
+
 local pallySpell = nakama.SpellBook.Paladin
 local genericSpell = nakama.SpellBook.Generic
 local pause = nakama.Pause
+local loot = nakama.Loot
+local colors = nakama.Colors
 
 local gui = {
     -- dummy
@@ -32,13 +36,61 @@ local gui = {
         size = 14,
         align = "CENTER"
     },
+    -- heal section
+    {
+        type = "section",
+        size = 12,
+        text = "Heal |r",
+        align = "center",
+        contentHeight = 30,
+        expanded = false,
+        height = 20,
+    },
+    -- spacer (2)
+    {
+        type = "spacer",
+        size = 2,
+    },
+    -- checkbox | use Holy Light
+    {
+        type = "checkbox",
+        size = 12,
+        y = -1,
+        text = "use " .. colors.LightPink .. "Holy Light (inCombat)",
+        key = "_use_heal_holyLight",
+        default = true
+    },
+    -- text | Holy Light % threshold
+    {
+        type = "text",
+        text = colors.Red .. "HP " .. colors.White .. "% threshold |r",
+        size = 12,
+        x = 15,
+    },
+    -- spinner | Holy Light % threshold
+    {
+        type = "spinner",
+        key = "_use_heal_holyLight",
+        height = 10,
+        y = 12,
+        spin = 35,
+        step = 1,
+        shiftStep = 5,
+        min = 20,
+        max = 70
+    },
+    -- spacer (2)
+    {
+        type = "spacer",
+        size = 2,
+    },
     -- potion section
     {
         type = "section",
         size = 12,
-        text = "Potions |r",
+        text = colors.White .. "Potions|r",
         align = "center",
-        contentHeight = 40,
+        contentHeight = 30,
         expanded = false,
         height = 20,
     },
@@ -52,14 +104,14 @@ local gui = {
         type = "checkbox",
         size = 12,
         y = -1,
-        text = "use " .. "|cffff0000HP " .. "|cffffffffpotions |r",
+        text = "use " .. colors.Red .. "HP " .. colors.White .. "potions |r",
         key = "_use_potions_health",
         default = true
     },
     -- text | HP potion % threshold
     {
         type = "text",
-        text = "|cffff0000HP " .. "|cffffffff% threshold |r",
+        text = colors.Red .. "HP " .. colors.White .. "% threshold |r",
         size = 12,
         x = 15,
     },
@@ -71,17 +123,17 @@ local gui = {
         y = 12,
         spin = 30,
         step = 1,
-        shiftStep = 1,
-        min = 1,
-        max = 70
+        shiftStep = 5,
+        min = 10,
+        max = 50
     },
     -- QOL section
     {
         type = "section",
         size = 12,
-        text = "QOL |r",
+        text = colors.PeachPuff .. "QOL|r",
         align = "center",
-        contentHeight = 40,
+        contentHeight = 20,
         expanded = false,
         height = 20,
     },
@@ -94,7 +146,7 @@ local gui = {
     {
         type = "checkbox",
         size = 12,
-        text = "|cFFA0522Dnakama loothelper |r",
+        text = colors.PeachPuff .. "nakama loothelper|r",
         key = "_nakama_loothelper",
         default = true
     },
@@ -117,6 +169,23 @@ local function sealOfRighteousness()
     end
 end
 
+local function holyLight()
+    if not player:Ui("_use_heal_holyLight") then return false end
+    if player:SpellReady(pallySpell.HolyLight)
+        and player:Health() < player:Ui("_use_heal_holyLight_spin")
+        and not player:Moving() then
+        return player:Cast(pallySpell.HolyLight)
+    end
+end
+
+local function mainRotation()
+    if target:Range(1) < 5 and _A.UnitIsFacing(player.guid, target.guid, 130) then
+        if player:SpellReady(pallySpell.CrusaderStrike) then
+            return target:Cast(pallySpell.CrusaderStrike)
+        end
+    end
+end
+
 local function inCombat()
     if not player then return true end
 
@@ -125,6 +194,26 @@ local function inCombat()
     end
 
     if pause.BadStateOrMounted() then
+        return true
+    end
+
+    if not target then
+        return true
+    end
+
+    if target:Dead() or target:Friend() then
+        return true
+    end
+
+    if holyLight() then
+        return true
+    end
+
+    if sealOfRighteousness() then
+        return true
+    end
+
+    if mainRotation() then
         return true
     end
 end
@@ -143,6 +232,10 @@ local function outCombat()
     if sealOfRighteousness() then
         return true
     end
+
+    if loot.Auto() then
+        return true
+    end
 end
 
 --------------------------------------------------------------------------------
@@ -154,7 +247,7 @@ _A.CR:Add("Paladin", {
     ooc = outCombat,
     use_lua_engine = true,
     gui = gui,
-    gui_st = { title = "Settings", color = "FFF468", width = "200", height = "200" },
+    gui_st = { title = "Settings", color = "F48CBA", width = "200", height = "200" },
     wow_ver = "3.3.5",
     apep_ver = "1.1",
     load = exeOnLoad,
