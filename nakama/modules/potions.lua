@@ -1,5 +1,5 @@
 --------------------------------------------------------------------------------
--- nakamaPotions - Table for ID's
+-- nakama Potions - Table for ID's
 -- Author: TheGentleman
 --------------------------------------------------------------------------------
 local nakama, _A, nakama = ...
